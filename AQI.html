@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Air Quality Dashboard</title>
+    <style>
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(to right, #f8fbff, #e0eafc);
+    overflow-x: hidden;
+    animation: fadeInBody 1s ease-in;
+}
+
+@keyframes fadeInBody {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.header {
+    background-color: #1a1a2e;
+    color: white;
+    padding: 1.2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: slideDown 1s ease-out;
+}
+
+@keyframes slideDown {
+    0% { transform: translateY(-20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    animation: fadeIn 1.5s ease;
+}
+
+.controls {
+    display: flex;
+    gap: 1rem;
+    animation: fadeIn 1.7s ease;
+}
+
+select, button {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    border: none;
+    background-color: #0f3460;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+select:hover, button:hover {
+    background-color: #16213e;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+#scene-container {
+    width: 100%;
+    height: 60vh;
+    background: linear-gradient(to top right, #ecf0f1, #dfe9f3);
+    animation: fadeIn 2s ease-in;
+}
+
+.sensor-data {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-top: 1px solid #ccc;
+    animation: slideUp 1.2s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.heading {
+    font-size: 1.6rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    display: inline-block;
+    padding-bottom: 0.3rem;
+    animation: fadeIn 1.4s ease;
+}
+
+.sensor-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.sensor-card {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 300px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeInCard 0.8s ease forwards;
+    opacity: 0;
+}
+
+@keyframes fadeInCard {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.sensor-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.sensor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.sensor-name {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #34495e;
+}
+
+.sensor-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 1rem 0;
+    color: #2c3e50;
+    transition: color 0.3s ease;
+}
+
+.secondary-values {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.secondary-item {
+    text-align: center;
+    flex: 1;
+}
+
+.secondary-label {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-bottom: 0.3rem;
+}
+
+.secondary-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #34495e;
+}
+
+.sensor-status {
+    padding: 0.4rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-good {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-moderate {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.status-poor {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .controls {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .sensor-list {
+        justify-content: center;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <div class="title">Environment Monitoring</div>
+            <div class="controls">
+                <select id="mode-selector">
+                    <option value="single">Single room mode</option>
+                    <option value="multi">Multi room mode</option>
+                </select>
+                <button id="refresh-btn">Refresh Data</button>
+            </div>
+        </div>
+
+        <div id="scene-container"></div>
+
+        <div class="sensor-data">
+            <div class="heading" id="data-heading">ESP Sensor Data</div>
+            <div class="sensor-list" id="sensor-list"></div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.js"></script>
+    <script>
+    // Configuration
+const AQI_THRESHOLDS = {
+  GOOD: 100,
+  MODERATE: 200
+};
+
+const AQI_COLORS = {
+  GOOD: 0x00c853,
+  MODERATE: 0xffd600,
+  POOR: 0xd50000
+};
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBbXE08KPhFDHYlXrx32Xd7-2IclAvqYT0",
+  authDomain: "esptest1-cfd44.firebaseapp.com",
+  databaseURL: "https://esptest1-cfd44-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "esptest1-cfd44",
+  storageBucket: "esptest1-cfd44.firebasestorage.app",
+  messagingSenderId: "715674527262",
+  appId: "1:715674527262:web:2293ff094f0e8dc97c700f"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// Application state
+const state = {
+  mode: 'single',
+  espDevices: {}  // Will store all ESP device data
+};
+
+// Three.js variables
+let container, scene, camera, renderer, boxes = [];
+let isDragging = false, previousMousePosition = { x: 0, y: 0 };
+let particleSystems = [];
+
+// Particle texture for better visibility
+let particleTexture;
+
+// Initialize the application
+function init() {
+  initThreeJS();
+  createParticleTexture();
+  setupEventListeners();
+  fetchDataFromFirebase();
+  
+  // Set up auto-refresh timer (every 30 seconds)
+  setInterval(fetchDataFromFirebase, 10000);
+  
+  // Start animation loop
+  animate();
+}
+
+// Fetch data from Firebase
+function fetchDataFromFirebase() {
+  // Fetch data for ESP1, ESP2, ESP3
+  Promise.all([
+    fetchESPData('ESP1'),
+    fetchESPData('ESP2'),
+    fetchESPData('ESP3')
+  ]).then(([esp1Data, esp2Data, esp3Data]) => {
+    // Store all ESP data
+    state.espDevices = {
+      ESP1: esp1Data,
+      ESP2: esp2Data,
+      ESP3: esp3Data
+    };
+    
+    updateSensorDisplay();
+    visualizeData();
+  }).catch(error => {
+    console.error("Error fetching data:", error);
+  });
+}
+
+// Fetch data for a specific ESP device
+function fetchESPData(espName) {
+  return new Promise((resolve, reject) => {
+    database.ref(espName).once('value')
+      .then(snapshot => {
+        const data = snapshot.val() || {};
+        // Parse values and ensure they exist
+        const result = {
+          name: espName,
+          final_aqi: parseInt(data.final_aqi) || 0,
+          humid: parseFloat(data.humid) || 0,
+          temp: parseFloat(data.temp) || 0
+        };
+        resolve(result);
+      })
+      .catch(error => {
+        console.error(`Error fetching ${espName} data:`, error);
+        reject(error);
+      });
+  });
+}
+
+// Create a circular particle texture for better visibility
+function createParticleTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  
+  const context = canvas.getContext('2d');
+  
+  // Create a radial gradient for a soft particle look
+  const gradient = context.createRadialGradient(
+    canvas.width / 2, canvas.height / 2, 0,
+    canvas.width / 2, canvas.height / 2, canvas.width / 2
+  );
+  
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  
+  particleTexture = new THREE.CanvasTexture(canvas);
+}
+
+// Initialize Three.js scene
+function initThreeJS() {
+  container = document.getElementById('scene-container');
+  
+  // Create scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xf0f0f0);
+  
+  // Create camera
+  camera = new THREE.PerspectiveCamera(
+    50, // FOV
+    container.clientWidth / container.clientHeight, // Aspect ratio
+    0.1, // Near clipping plane
+    1000 // Far clipping plane
+  );
+  camera.position.z = 10;
+  
+  // Add ambient light
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+  
+  // Add directional light
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  directionalLight.position.set(1, 1, 1);
+  scene.add(directionalLight);
+  
+  // Add a point light inside to illuminate particles better
+  const pointLight = new THREE.PointLight(0xffffff, 1, 10);
+  pointLight.position.set(0, 0, 0);
+  scene.add(pointLight);
+  
+  // Create renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+  
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+}
+
+// Set up event listeners
+function setupEventListeners() {
+  const modeSelector = document.getElementById('mode-selector');
+  modeSelector.addEventListener('change', (e) => {
+    state.mode = e.target.value;
+    updateSensorDisplay();
+    visualizeData();
+  });
+  
+  const refreshBtn = document.getElementById('refresh-btn');
+  refreshBtn.addEventListener('click', () => {
+    fetchDataFromFirebase();
+  });
+  
+  // 3D controls
+  const canvas = renderer.domElement;
+  
+  canvas.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    previousMousePosition = {
+      x: e.clientX,
+      y: e.clientY
+    };
+  });
+  
+  canvas.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      const deltaMove = {
+        x: e.clientX - previousMousePosition.x,
+        y: e.clientY - previousMousePosition.y
+      };
+      
+      // Rotate scene based on mouse movement
+      const rotationSpeed = 0.005;
+      scene.rotation.y += deltaMove.x * rotationSpeed;
+      scene.rotation.x += deltaMove.y * rotationSpeed;
+      
+      previousMousePosition = {
+        x: e.clientX,
+        y: e.clientY
+      };
+    }
+  });
+  
+  canvas.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+  
+  canvas.addEventListener('mouseleave', () => {
+    isDragging = false;
+  });
+  
+  // Zoom with mouse wheel
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    // Adjust camera position for zooming
+    const zoomSpeed = 0.1;
+    const direction = e.deltaY > 0 ? 1 : -1;
+    camera.position.z += direction * zoomSpeed;
+    // Limit zoom range
+    camera.position.z = Math.max(2, Math.min(camera.position.z, 15));
+  });
+}
+
+// Update sensor display in the DOM
+function updateSensorDisplay() {
+  const sensorList = document.getElementById('sensor-list');
+  const dataHeading = document.getElementById('data-heading');
+  
+  // Update heading based on selected mode
+  dataHeading.textContent = state.mode === 'single' ? 
+    'Single Room Mode' : 
+    'Multi Room Mode';
+  
+  // Clear previous sensors
+  sensorList.innerHTML = '';
+  
+  // If we don't have data yet, show loading
+  if (Object.keys(state.espDevices).length === 0) {
+    const loadingCard = document.createElement('div');
+    loadingCard.className = 'sensor-card';
+    loadingCard.innerHTML = '<div class="sensor-value">Loading data...</div>';
+    sensorList.appendChild(loadingCard);
+    return;
+  }
+  
+  // Create cards for each ESP device with renamed labels
+  Object.values(state.espDevices).forEach((esp, index) => {
+    // Define names based on mode
+    let displayName;
+    if (state.mode === 'single') {
+      // For single room mode: North Wall, East Wall, South Wall
+      switch(esp.name) {
+        case 'ESP1': displayName = 'North Wall'; break;
+        case 'ESP2': displayName = 'East Wall'; break;
+        case 'ESP3': displayName = 'South Wall'; break;
+        default: displayName = esp.name;
+      }
+    } else {
+      // For multi room mode: Room 1, Room 2, Room 3
+      switch(esp.name) {
+        case 'ESP1': displayName = 'Room 1'; break;
+        case 'ESP2': displayName = 'Room 2'; break;
+        case 'ESP3': displayName = 'Room 3'; break;
+        default: displayName = esp.name;
+      }
+    }
+    
+    const status = getAQIStatus(esp.final_aqi);
+    const statusClass = status === 'Good' ? 'status-good' : 
+                       status === 'Moderate' ? 'status-moderate' : 
+                       'status-poor';
+    
+    const sensorCard = document.createElement('div');
+    sensorCard.className = 'sensor-card';
+    
+    sensorCard.innerHTML = `
+      <div class="sensor-header">
+        <div class="sensor-name">${displayName}</div>
+        <div class="sensor-status ${statusClass}">${status}</div>
+      </div>
+      <div class="sensor-value">${esp.final_aqi} AQI</div>
+      <div class="secondary-values">
+        <div class="secondary-item">
+          <div class="secondary-label">Temperature</div>
+          <div class="secondary-value">${esp.temp}°C</div>
+        </div>
+        <div class="secondary-item">
+          <div class="secondary-label">Humidity</div>
+          <div class="secondary-value">${esp.humid}%</div>
+        </div>
+      </div>
+    `;
+    
+    sensorList.appendChild(sensorCard);
+  });
+}
+
+// Visualize data in 3D
+function visualizeData() {
+  // Clear previous boxes
+  boxes.forEach(box => {
+    scene.remove(box);
+  });
+  boxes = [];
+  
+  // Clear previous particle systems
+  particleSystems.forEach(system => {
+    scene.remove(system);
+  });
+  particleSystems = [];
+  
+  // If no data yet, return
+  if (Object.keys(state.espDevices).length === 0) {
+    return;
+  }
+  
+  // In both modes, we'll show all three ESP devices
+  if (state.mode === 'single') {
+    visualizeDetailedView();
+  } else {
+    visualizeComparisonView();
+  }
+}
+
+// Create particle system for air quality visualization
+function createParticleSystem(boxSize, value, position = { x: 0, y: 0, z: 0 }) {
+  // Determine particle count based on AQI value - higher count for better visibility
+  const particleCount = Math.max(300, Math.floor(value * 3));
+  
+  // Create particle geometry
+  const particles = new THREE.BufferGeometry();
+  const positions = [];
+  const velocities = [];
+  const colors = [];
+  
+  // Calculate bounds based on box size (slightly smaller to keep particles inside)
+  const bounds = {
+    x: boxSize.width * 0.9 / 2,
+    y: boxSize.height * 0.9 / 2,
+    z: boxSize.depth * 0.9 / 2
+  };
+  
+  // Get base color from AQI
+  const baseColor = getColorFromAQI(value);
+  const color = new THREE.Color(baseColor);
+  
+  for (let i = 0; i < particleCount; i++) {
+    // Random position within box bounds
+    positions.push(
+      (Math.random() * 2 - 1) * bounds.x,
+      (Math.random() * 2 - 1) * bounds.y,
+      (Math.random() * 2 - 1) * bounds.z
+    );
+    
+    // Random velocity - increased for better visibility
+    const speedFactor = Math.max(0.5, value / 150); // Higher AQI = faster particles
+    velocities.push(
+      (Math.random() * 2 - 1) * 0.02 * speedFactor,
+      (Math.random() * 2 - 1) * 0.02 * speedFactor,
+      (Math.random() * 2 - 1) * 0.02 * speedFactor
+    );
+    
+    // Add slightly varied colors for visual interest
+    const colorVariation = 0.15;
+    colors.push(
+      color.r + (Math.random() * 2 - 1) * colorVariation,
+      color.g + (Math.random() * 2 - 1) * colorVariation,
+      color.b + (Math.random() * 2 - 1) * colorVariation
+    );
+  }
+  
+  particles.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  particles.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  particles.userData = { 
+    velocities: velocities, 
+    bounds: bounds,
+    value: value
+  };
+  
+  // Determine particle size based on AQI - larger for better visibility
+  const size = value > AQI_THRESHOLDS.MODERATE ? 0.15 : 
+              value > AQI_THRESHOLDS.GOOD ? 0.12 : 0.1;
+  
+  // Create particle material with texture and vertex colors
+  const particleMaterial = new THREE.PointsMaterial({
+    size: size,
+    map: particleTexture,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.8,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  
+  // Create particle system
+  const particleSystem = new THREE.Points(particles, particleMaterial);
+  particleSystem.position.set(position.x, position.y, position.z);
+  
+  scene.add(particleSystem);
+  particleSystems.push(particleSystem);
+  
+  return particleSystem;
+}
+
+// Update particle positions in animation loop
+function updateParticles() {
+  particleSystems.forEach(system => {
+    const positions = system.geometry.attributes.position.array;
+    const velocities = system.geometry.userData.velocities;
+    const bounds = system.geometry.userData.bounds;
+    
+    for (let i = 0; i < positions.length; i += 3) {
+      // Update position based on velocity
+      positions[i] += velocities[i];
+      positions[i + 1] += velocities[i + 1];
+      positions[i + 2] += velocities[i + 2];
+      
+      // Bounce off walls with slight damping
+      if (Math.abs(positions[i]) > bounds.x) {
+        velocities[i] *= -0.95;
+        positions[i] = positions[i] > 0 ? bounds.x : -bounds.x;
+      }
+      if (Math.abs(positions[i + 1]) > bounds.y) {
+        velocities[i + 1] *= -0.95;
+        positions[i + 1] = positions[i + 1] > 0 ? bounds.y : -bounds.y;
+      }
+      if (Math.abs(positions[i + 2]) > bounds.z) {
+        velocities[i + 2] *= -0.95;
+        positions[i + 2] = positions[i + 2] > 0 ? bounds.z : -bounds.z;
+      }
+    }
+    
+    system.geometry.attributes.position.needsUpdate = true;
+  });
+}
+
+// Visualize Detailed View - Shows a single room with walls representing ESP units
+function visualizeDetailedView() {
+  const espDevices = Object.values(state.espDevices);
+  const numDevices = espDevices.length;
+  
+  if (numDevices < 3) {
+    // If we don't have enough data, display a message
+    return;
+  }
+  
+  // Room dimensions - refined proportions
+  const roomSize = 6;
+  const wallThickness = 0.15;
+  const roomHeight = 4;
+  
+  // Create room container
+  const roomGroup = new THREE.Group();
+  
+  // Create walls - each representing an ESP device with new names
+  const walls = [
+    // North wall (ESP1)
+    { position: [0, 0, roomSize/2], rotation: [0, 0, 0], size: [roomSize, roomHeight, wallThickness], esp: espDevices[0], name: 'North Wall' },
+    // East wall (ESP2)
+    { position: [roomSize/2, 0, 0], rotation: [0, Math.PI/2, 0], size: [roomSize, roomHeight, wallThickness], esp: espDevices[1], name: 'East Wall' },
+    // South wall (ESP3)
+    { position: [0, 0, -roomSize/2], rotation: [0, Math.PI, 0], size: [roomSize, roomHeight, wallThickness], esp: espDevices[2], name: 'South Wall' }
+  ];
+  
+  // Create each wall
+  walls.forEach(wall => {
+    const aqi = wall.esp.final_aqi;
+    const color = getColorFromAQI(aqi);
+    
+    // Create wall geometry
+    const geometry = new THREE.BoxGeometry(wall.size[0], wall.size[1], wall.size[2]);
+    const material = new THREE.MeshPhongMaterial({ 
+      color: color,
+      transparent: true,
+      opacity: 0.7,
+      side: THREE.DoubleSide
+    });
+    
+    const wallMesh = new THREE.Mesh(geometry, material);
+    wallMesh.position.set(wall.position[0], wall.position[1], wall.position[2]);
+    wallMesh.rotation.set(wall.rotation[0], wall.rotation[1], wall.rotation[2]);
+    
+    // Add subtle wireframe
+    const edges = new THREE.EdgesGeometry(geometry);
+    const line = new THREE.LineSegments(
+      edges,
+      new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 0.5 })
+    );
+    wallMesh.add(line);
+    
+    // Create particle systems near each wall to show air quality
+    const particlePosition = {
+      x: wall.position[0] * 0.6, 
+      y: wall.position[1], 
+      z: wall.position[2] * 0.6
+    };
+    const boxSize = { width: 3, height: 3, depth: 3 };
+    createParticleSystem(boxSize, wall.esp.final_aqi, particlePosition);
+    
+    roomGroup.add(wallMesh);
+  });
+  
+  // Add floor for better orientation
+  const floorGeometry = new THREE.PlaneGeometry(roomSize, roomSize);
+  const floorMaterial = new THREE.MeshPhongMaterial({ 
+    color: 0x444444,
+    side: THREE.DoubleSide
+  });
+  const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.rotation.x = Math.PI / 2;
+  floor.position.y = -roomHeight/2;
+  roomGroup.add(floor);
+  
+  // Add ceiling for completeness
+  const ceilingGeometry = new THREE.PlaneGeometry(roomSize, roomSize);
+  const ceilingMaterial = new THREE.MeshPhongMaterial({ 
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  });
+  const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+  ceiling.rotation.x = Math.PI / 2;
+  ceiling.position.y = roomHeight/2;
+  roomGroup.add(ceiling);
+  
+  // Add left wall (transparent)
+  const leftWallGeometry = new THREE.PlaneGeometry(roomSize, roomHeight);
+  const leftWallMaterial = new THREE.MeshPhongMaterial({ 
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.1,
+    side: THREE.DoubleSide
+  });
+  const leftWall = new THREE.Mesh(leftWallGeometry, leftWallMaterial);
+  leftWall.rotation.y = Math.PI / 2;
+  leftWall.position.x = -roomSize/2;
+  roomGroup.add(leftWall);
+  
+  // Add subtle lighting for better visibility
+  const pointLight = new THREE.PointLight(0xffffff, 0.8, 20);
+  pointLight.position.set(0, 0, 0);
+  roomGroup.add(pointLight);
+  
+  scene.add(roomGroup);
+  boxes.push(roomGroup);
+  
+  // Position camera to see inside the room
+  camera.position.set(-roomSize*0.8, roomHeight*0.2, roomSize*0.8);
+  camera.lookAt(0, 0, 0);
+}
+
+// Visualize Comparison View - Shows all ESP units side by side
+function visualizeComparisonView() {
+  const espDevices = Object.values(state.espDevices);
+  
+  espDevices.forEach((esp, index) => {
+    // Position boxes side by side
+    const positionX = (index - 1) * 4;
+    const position = { x: positionX, y: 0, z: 0 };
+    
+    const boxSize = getBoxSizeFromAQI(esp.final_aqi);
+    const boxColor = getColorFromAQI(esp.final_aqi);
+    
+    // Create box mesh
+    const geometry = new THREE.BoxGeometry(boxSize.width, boxSize.height, boxSize.depth);
+    const material = new THREE.MeshPhongMaterial({ 
+      color: boxColor,
+      transparent: true,
+      opacity: 0.3,
+      side: THREE.DoubleSide
+    });
+    
+    const box = new THREE.Mesh(geometry, material);
+    box.position.set(position.x, position.y, position.z);
+    
+    // Add wireframe
+    const edges = new THREE.EdgesGeometry(geometry);
+    const line = new THREE.LineSegments(
+      edges,
+      new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1 })
+    );
+    box.add(line);
+    
+    // Get room name instead of ESP name
+    let roomName;
+    switch(esp.name) {
+      case 'ESP1': roomName = 'Room 1'; break;
+      case 'ESP2': roomName = 'Room 2'; break;
+      case 'ESP3': roomName = 'Room 3'; break;
+      default: roomName = esp.name;
+    }
+    
+    // Add room name label
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = 256;
+    canvas.height = 128;
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.font = '40px Arial';
+    context.fillStyle = '#000000';
+    context.textAlign = 'center';
+    context.fillText(roomName, canvas.width / 2, canvas.height / 2);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    const labelMaterial = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true
+    });
+    
+    const labelGeometry = new THREE.PlaneGeometry(2, 0.75);
+    const label = new THREE.Mesh(labelGeometry, labelMaterial);
+    label.position.y = -boxSize.height / 2 - 0.5;
+    box.add(label);
+    
+    // Add AQI value label
+    const aqiCanvas = document.createElement('canvas');
+    const aqiContext = aqiCanvas.getContext('2d');
+    aqiCanvas.width = 256;
+    aqiCanvas.height = 128;
+    aqiContext.fillStyle = '#fafafa';
+    aqiContext.fillRect(0, 0, aqiCanvas.width, aqiCanvas.height);
+    aqiContext.font = '48px Arial';
+    aqiContext.fillStyle = '#000000';
+    aqiContext.textAlign = 'center';
+    aqiContext.fillText(`${esp.final_aqi} AQI`, aqiCanvas.width / 2, aqiCanvas.height / 2 + 16);
+    
+    const aqiTexture = new THREE.CanvasTexture(aqiCanvas);
+    const aqiMaterial = new THREE.MeshBasicMaterial({
+      map: aqiTexture,
+      transparent: true
+    });
+    
+    const aqiGeometry = new THREE.PlaneGeometry(1.8, 0.65);
+    const aqiLabel = new THREE.Mesh(aqiGeometry, aqiMaterial);
+    aqiLabel.position.y = boxSize.height / 2 + 0.5;
+    box.add(aqiLabel);
+    
+    // Create particles inside the box
+    createParticleSystem(boxSize, esp.final_aqi, position);
+    
+    scene.add(box);
+    boxes.push(box);
+  });
+  
+  // Position camera to see all boxes
+  camera.position.set(0, 5, 12);
+  camera.lookAt(0, 0, 0);
+}
+
+// Helper function to determine box size based on AQI
+function getBoxSizeFromAQI(aqi) {
+  // Base size
+  const baseSize = 2;
+  
+  // Scale factor based on AQI severity
+  let scale = 1.0;
+  
+  if (aqi > AQI_THRESHOLDS.MODERATE) {
+    // Poor air quality - larger box
+    scale = 1.5;
+  } else if (aqi > AQI_THRESHOLDS.GOOD) {
+    // Moderate air quality - medium box
+    scale = 1.25;
+  }
+  
+  return {
+    width: baseSize * scale,
+    height: baseSize * scale,
+    depth: baseSize * scale
+  };
+}
+
+// Helper function to determine color based on AQI
+function getColorFromAQI(aqi) {
+  if (aqi > AQI_THRESHOLDS.MODERATE) {
+    return AQI_COLORS.POOR;
+  } else if (aqi > AQI_THRESHOLDS.GOOD) {
+    return AQI_COLORS.MODERATE;
+  } else {
+    return AQI_COLORS.GOOD;
+  }
+}
+
+// Helper function to get AQI status text
+function getAQIStatus(aqi) {
+  if (aqi > AQI_THRESHOLDS.MODERATE) {
+    return "Poor";
+  } else if (aqi > AQI_THRESHOLDS.GOOD) {
+    return "Moderate";
+  } else {
+    return "Good";
+  }
+}
+
+// Animation loop
+function animate() {
+  requestAnimationFrame(animate);
+  
+  // Apply gentle rotation to the scene for constant movement
+  scene.rotation.y += 0.002;
+  
+  // Update particles
+  updateParticles();
+  
+  // Rotate boxes for better visual effect
+  boxes.forEach((box, index) => {
+    box.rotation.y += 0.005;
+    
+    // Add subtle floating motion
+    box.position.y = Math.sin(Date.now() * 0.001 + index) * 0.1;
+  });
+  
+  renderer.render(scene, camera);
+}
+
+// Initialize the application when the DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
