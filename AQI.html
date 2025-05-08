@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Air Quality Dashboard</title>
+    <title>Air Quality Dashboard</title>
+    <link rel="stylesheet" href="notification.css">
+    <script src="notification.js" defer></script>
+    <script src="services.js" defer></script>
     <style>
         * {
     margin: 0;
@@ -233,7 +236,7 @@ select:hover, button:hover {
 <body>
     <div id="app">
         <div class="header">
-            <div class="title">Environment Monitoring</div>
+            <div class="title">Aqi Monitoring</div>
             <div class="controls">
                 <select id="mode-selector">
                     <option value="single">Single room mode</option>
